@@ -19,7 +19,7 @@ func New() *Cache {
 	}
 }
 
-// Set add to storage new value by key
+// Set add new value by key to storage for a specific time ttl
 func (c *Cache) Set(key string, value interface{}, ttl time.Duration) {
 	c.mu.Lock()
 	c.data[key] = value
@@ -32,8 +32,7 @@ func (c *Cache) Set(key string, value interface{}, ttl time.Duration) {
 	}()
 }
 
-// Get return stored value by key if it exists
-// Otherwise, returns an error
+// Get return stored value by key if it exists, else returns an error
 func (c *Cache) Get(key string) (interface{}, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -46,8 +45,7 @@ func (c *Cache) Get(key string) (interface{}, error) {
 	return value, nil
 }
 
-// Delete remove value from storage by key if it exists
-// Otherwise, returns an error
+// Delete remove value from storage by key if it exists, else returns an error
 func (c *Cache) Delete(key string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
