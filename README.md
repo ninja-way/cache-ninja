@@ -11,11 +11,11 @@ func New() *cache.Cache
 
 // Cache is a struct for storage any value by unique key
 type Cache struct {}
-    // Set add to storage new value by key 
-    Set(key string, value interface{})
-    // Get return stored value by key if it exists
+    // Set add new value by key to storage for a specific time ttl
+    Set(key string, value interface{}, ttl time.Duration)
+    // Get return stored value by key if it exists, else returns an error
     Get(key string) (interface{}, error)
-    // Delete remove value from storage by key if it exists
+    // Delete remove value from storage by key if it exists, else returns an error
     Delete(key string) error
 ```
 
@@ -27,36 +27,44 @@ package main
 import (
 	"fmt"
 	"github.com/ninja-way/cache-ninja/pkg/cache"
+	"time"
 )
 
 func main() {
 	cache := cache.New()
 
-	cache.Set("id", 1)
-
-	fmt.Println(cache.Delete("user"))
-
-	cache.Set("id", 2)
-	cache.Set("user", struct {
-		name string
-		age  int8
-	}{
-		name: "Tom",
-		age:  19,
-	})
-
+	// Try get non-exist id
 	_, err := cache.Get("test")
 	if err != nil {
 		fmt.Println(err)
 	}
+	// Result: get: unknown key
 
-	value, _ := cache.Get("id")
+	// Try delete non-exist id
+	fmt.Println(cache.Delete("user"))
+	// Result: delete: unknown key
+
+	// Set and then get value
+	cache.Set("user_name", "Trevor", time.Second*3)
+	value, _ := cache.Get("user_name")
 	fmt.Println(value)
+	// Result: Trevor
+
+	// Add items in goroutines
+	for i := 1; i <= 100; i++ {
+		duration := time.Second
+		if i%2 == 0 {
+			duration = time.Minute
+		}
+
+		go cache.Set(fmt.Sprintf("%did", i), i, duration)
+	}
+	time.Sleep(time.Second * 2)
+
+	// Get paired with big ttl and unpaired with small ttl
+	fmt.Println(cache.Get("21id"))
+	fmt.Println(cache.Get("22id"))
+	// Result: <nil> get: unknown key
+	//	    22 <nil>
 }
-```
-#### Output
-```
-delete: unknown key
-get: unknown key
-2  
 ```
